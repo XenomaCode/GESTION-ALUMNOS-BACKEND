@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Table
 from sqlalchemy.orm import relationship
-from .database import Base
+from ..db.database import Base
 
 # Tabla intermedia para la relación muchos a muchos entre alumnos y materias
 alumno_materia = Table(
