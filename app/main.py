@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import Body, FastAPI, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional, Annotated
 from app.models.models import Base, User
 from app.db.database import engine, get_db, SessionLocal
 from app import schemas
@@ -85,23 +85,43 @@ async def login_for_access_token(
     }
 
 @app.post("/register", response_model=schemas.User, tags=["Autenticación"])
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def register_user(
+    email: Annotated[str, Form(description="Correo electrónico del usuario")],
+    password: Annotated[str, Form(description="Contraseña del usuario")],
+    role: Annotated[str, Form(description="Rol del usuario (admin/user)")] = "user",
+    db: Session = Depends(get_db)
+):
     """
     Registrar un nuevo usuario no administrador
     """
-    return auth_service.create_user(db, user)
+    user_data = schemas.UserCreate(email=email, password=password, role=role)
+    return auth_service.create_user(db, user_data)
 
 # CRUD Alumnos
-@app.post("/alumnos/", response_model=schemas.Alumno, tags=["Alumnos"])
-def create_alumno(
-    alumno: schemas.AlumnoCreate,
+@app.post(
+    "/alumnos/",
+    response_model=schemas.Alumno,
+    tags=["Alumnos"],
+    summary="Crear nuevo alumno"
+)
+async def create_alumno(
+    nombre: Annotated[str, Form(description="Nombre del alumno (2-50 caracteres)")],
+    apellido: Annotated[str, Form(description="Apellido del alumno (2-50 caracteres)")],
+    matricula: Annotated[str, Form(description="Matrícula única del alumno (5-20 caracteres)")],
+    email: Annotated[str, Form(description="Correo electrónico del alumno")],
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(admin_required)
 ):
     """
     Crear un nuevo alumno (solo administradores)
     """
-    return alumno_service.create_alumno(db, alumno)
+    alumno_data = schemas.AlumnoCreate(
+        nombre=nombre,
+        apellido=apellido,
+        matricula=matricula,
+        email=email
+    )
+    return alumno_service.create_alumno(db, alumno_data)
 
 @app.get("/alumnos/", response_model=List[schemas.Alumno], tags=["Alumnos"])
 def read_alumnos(
@@ -124,19 +144,32 @@ def read_alumno(
     """
     Obtener información detallada de un alumno específico (todos los usuarios autenticados)
     """
-    return alumno_service.get_alumno(db, alumno_id)
+    try:
+        alumno = alumno_service.get_alumno(db, alumno_id)
+        return alumno
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/alumnos/{alumno_id}", response_model=schemas.Alumno, tags=["Alumnos"])
-def update_alumno(
+async def update_alumno(
     alumno_id: int,
-    alumno: schemas.AlumnoUpdate,
+    nombre: Annotated[str, Form(description="Nombre del alumno")] = None,
+    apellido: Annotated[str, Form(description="Apellido del alumno")] = None,
+    email: Annotated[str, Form(description="Correo electrónico")] = None,
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(admin_required)
 ):
     """
     Actualizar información de un alumno existente (solo administradores)
     """
-    return alumno_service.update_alumno(db, alumno_id, alumno)
+    alumno_data = schemas.AlumnoUpdate(
+        nombre=nombre if nombre else None,
+        apellido=apellido if apellido else None,
+        email=email if email else None
+    )
+    return alumno_service.update_alumno(db, alumno_id, alumno_data)
 
 @app.delete("/alumnos/{alumno_id}", response_model=schemas.ResponseMessage, tags=["Alumnos"])
 def delete_alumno(
@@ -151,15 +184,22 @@ def delete_alumno(
 
 # CRUD Materias
 @app.post("/materias/", response_model=schemas.Materia, tags=["Materias"])
-def create_materia(
-    materia: schemas.MateriaCreate,
+async def create_materia(
+    nombre: Annotated[str, Form(description="Nombre de la materia")],
+    codigo: Annotated[str, Form(description="Código único de la materia")],
+    creditos: Annotated[int, Form(description="Número de créditos")],
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(admin_required)
 ):
     """
     Crear una nueva materia (solo administradores)
     """
-    return materia_service.create_materia(db, materia)
+    materia_data = schemas.MateriaCreate(
+        nombre=nombre,
+        codigo=codigo,
+        creditos=creditos
+    )
+    return materia_service.create_materia(db, materia_data)
 
 @app.get("/materias/", response_model=List[schemas.Materia], tags=["Materias"])
 def read_materias(
@@ -185,16 +225,21 @@ def read_materia(
     return materia_service.get_materia(db, materia_id)
 
 @app.put("/materias/{materia_id}", response_model=schemas.Materia, tags=["Materias"])
-def update_materia(
+async def update_materia(
     materia_id: int,
-    materia: schemas.MateriaUpdate,
+    nombre: Annotated[str, Form(description="Nombre de la materia")] = None,
+    creditos: Annotated[int, Form(description="Número de créditos")] = None,
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(admin_required)
 ):
     """
     Actualizar información de una materia existente (solo administradores)
     """
-    return materia_service.update_materia(db, materia_id, materia)
+    materia_data = schemas.MateriaUpdate(
+        nombre=nombre if nombre else None,
+        creditos=creditos if creditos else None
+    )
+    return materia_service.update_materia(db, materia_id, materia_data)
 
 @app.delete("/materias/{materia_id}", response_model=schemas.ResponseMessage, tags=["Materias"])
 def delete_materia(
@@ -233,15 +278,22 @@ def get_materias_alumno(
 
 # Calificaciones
 @app.post("/calificaciones/", response_model=schemas.Calificacion, tags=["Calificaciones"])
-def create_calificacion(
-    calificacion: schemas.CalificacionCreate,
+async def create_calificacion(
+    alumno_id: Annotated[int, Form(description="ID del alumno")],
+    materia_id: Annotated[int, Form(description="ID de la materia")],
+    calificacion: Annotated[float, Form(description="Calificación (0-10)")],
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(admin_required)
 ):
     """
     Registrar una calificación (solo administradores)
     """
-    return calificacion_service.create_calificacion(db, calificacion)
+    calificacion_data = schemas.CalificacionCreate(
+        alumno_id=alumno_id,
+        materia_id=materia_id,
+        calificacion=calificacion
+    )
+    return calificacion_service.create_calificacion(db, calificacion_data)
 
 @app.get("/calificaciones/alumno/{alumno_id}", response_model=List[schemas.Calificacion], tags=["Calificaciones"])
 def get_calificaciones_alumno(
