@@ -2,8 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
-from app import models, schemas
+from app.models.models import Base, User, Alumno, Materia, Calificacion
 from app.db.database import engine, get_db
+from app import schemas  # Añadida importación de schemas
 from app.services import (
     auth_service,
     jwt_service,
@@ -13,7 +14,9 @@ from app.services import (
     calificacion_service
 )
 
-models.Base.metadata.create_all(bind=engine)
+
+# Crear las tablas
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Sistema de Gestión Escolar",
