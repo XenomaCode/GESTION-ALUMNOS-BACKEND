@@ -2,6 +2,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Tabl
 from sqlalchemy.orm import relationship
 from ..db.database import Base
 
+
 # Tabla intermedia para la relación muchos a muchos entre alumnos y materias
 alumno_materia = Table(
     'alumno_materia',
