@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from app.models.models import Alumno, Materia
+from app.models.models import Alumno, Materia, alumno_materia
 from app import schemas
 
 def inscribir_alumno(db: Session, alumno_id: int, materia_id: int):
@@ -68,3 +68,9 @@ def dar_baja_materia(db: Session, alumno_id: int, materia_id: int):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al dar de baja al alumno de la materia")
+
+def get_todas_inscripciones(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Obtiene todas las inscripciones con paginación
+    """
+    return db.query(alumno_materia).offset(skip).limit(limit).all()

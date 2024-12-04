@@ -131,3 +131,10 @@ class CalificacionUpdate(BaseModel):
 # Actualizar referencias circulares
 Alumno.update_forward_refs()
 Materia.update_forward_refs()
+
+class Inscripcion(BaseModel):
+    alumno_id: int
+    materia_id: int
+
+    class Config:
+        from_attributes = True

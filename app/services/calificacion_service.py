@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from app.models.models import Calificacion, Alumno, Materia
 from app import schemas
 
+
 def create_calificacion(db: Session, calificacion: schemas.CalificacionCreate):
     """
     Registra una nueva calificación
@@ -81,3 +82,9 @@ def get_promedio_alumno(db: Session, alumno_id: int):
     
     total = sum(c.calificacion for c in calificaciones)
     return total / len(calificaciones)
+
+def get_todas_calificaciones(db: Session, skip: int = 0, limit: int = 100):
+    """
+    Obtiene todas las calificaciones de la base de datos
+    """
+    return db.query(Calificacion).offset(skip).limit(limit).all()

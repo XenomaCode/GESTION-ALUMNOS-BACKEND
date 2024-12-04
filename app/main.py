@@ -110,7 +110,7 @@ async def create_alumno(
     matricula: Annotated[str, Form(description="Matrícula única del alumno (5-20 caracteres)")],
     email: Annotated[str, Form(description="Correo electrónico del alumno")],
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Crear un nuevo alumno (solo administradores)
@@ -128,7 +128,7 @@ def read_alumnos(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener lista de todos los alumnos registrados (todos los usuarios autenticados)
@@ -139,7 +139,7 @@ def read_alumnos(
 def read_alumno(
     alumno_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener información detallada de un alumno específico (todos los usuarios autenticados)
@@ -159,7 +159,7 @@ async def update_alumno(
     apellido: Annotated[str, Form(description="Apellido del alumno")] = None,
     email: Annotated[str, Form(description="Correo electrónico")] = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Actualizar información de un alumno existente (solo administradores)
@@ -175,7 +175,7 @@ async def update_alumno(
 def delete_alumno(
     alumno_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Eliminar un alumno del sistema (solo administradores)
@@ -189,7 +189,7 @@ async def create_materia(
     codigo: Annotated[str, Form(description="Código único de la materia")],
     creditos: Annotated[int, Form(description="Número de créditos")],
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Crear una nueva materia (solo administradores)
@@ -206,7 +206,7 @@ def read_materias(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener lista de todas las materias registradas (todos los usuarios autenticados)
@@ -217,7 +217,7 @@ def read_materias(
 def read_materia(
     materia_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener información detallada de una materia específica (todos los usuarios autenticados)
@@ -230,7 +230,7 @@ async def update_materia(
     nombre: Annotated[str, Form(description="Nombre de la materia")] = None,
     creditos: Annotated[int, Form(description="Número de créditos")] = None,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Actualizar información de una materia existente (solo administradores)
@@ -258,7 +258,7 @@ def inscribir_alumno(
     alumno_id: int,
     materia_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Inscribir un alumno en una materia específica (solo administradores)
@@ -269,12 +269,24 @@ def inscribir_alumno(
 def get_materias_alumno(
     alumno_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener todas las materias en las que está inscrito un alumno (todos los usuarios autenticados)
     """
     return inscripcion_service.get_materias_alumno(db, alumno_id)
+
+@app.get("/inscripciones/", response_model=List[schemas.Inscripcion], tags=["Inscripciones"])
+def get_todas_inscripciones(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    #current_user: schemas.User = Depends(get_current_user)
+):
+    """
+    Obtener todas las inscripciones (todos los usuarios autenticados)
+    """
+    return inscripcion_service.get_todas_inscripciones(db, skip=skip, limit=limit)
 
 # Calificaciones
 @app.post("/calificaciones/", response_model=schemas.Calificacion, tags=["Calificaciones"])
@@ -283,7 +295,7 @@ async def create_calificacion(
     materia_id: Annotated[int, Form(description="ID de la materia")],
     calificacion: Annotated[float, Form(description="Calificación (0-10)")],
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(admin_required)
+    #current_user: schemas.User = Depends(admin_required)
 ):
     """
     Registrar una calificación (solo administradores)
@@ -299,7 +311,7 @@ async def create_calificacion(
 def get_calificaciones_alumno(
     alumno_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener todas las calificaciones de un alumno (todos los usuarios autenticados)
@@ -310,12 +322,24 @@ def get_calificaciones_alumno(
 def get_estadisticas_alumno(
     alumno_id: int,
     db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(get_current_user)
+    #current_user: schemas.User = Depends(get_current_user)
 ):
     """
     Obtener estadísticas de un alumno (todos los usuarios autenticados)
     """
     return calificacion_service.get_estadisticas_alumno(db, alumno_id)
+
+@app.get("/calificaciones/", response_model=List[schemas.Calificacion], tags=["Calificaciones"])
+def get_todas_calificaciones(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    #current_user: schemas.User = Depends(get_current_user)
+):
+    """
+    Obtener todas las calificaciones de todos los alumnos (todos los usuarios autenticados)
+    """
+    return calificacion_service.get_todas_calificaciones(db, skip=skip, limit=limit)
 
 # Rutas administrativas
 @app.get("/admin/info", tags=["Administración"])
